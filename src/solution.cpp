@@ -18,7 +18,7 @@ vector<pair<int,int> > parsing(string filename){
         string line;
         getline(file, line);
         lnum++;
-        if(line == "") break;
+        if(line == "") continue;
 
         // parsing 2 integers with delimiters
         char delimiters[2] = {'\t', ' '};
