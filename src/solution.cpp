@@ -12,12 +12,14 @@ struct Node{
     Node **childs;
     bool leaf;
 
-    Node(int maxChilds, bool leaf): maxChilds(maxChilds), numKeys(0), leaf(leaf){
+    Node(int maxChilds, bool leaf): maxChilds(maxChilds), leaf(leaf){
         keys = new int[maxChilds-1];
         values = new int[maxChilds-1];
         childs = new Node *[maxChilds];
+        numKeys = 0;
     }
 
+    // return the node and index of the key
     pair<Node*,int> search(int key){
         int idx = lower_bound(keys, keys+numKeys, key) - keys;
         if(keys[idx] == key) return {this,idx};
@@ -29,8 +31,8 @@ struct Node{
         int idx = lower_bound(keys, keys+numKeys, key) - keys;
         if(idx < numKeys && keys[idx] == key) return;
 
-        if(leaf){
-            for(int i=numKeys; i>idx; i--){
+        if(leaf){ // insert if the node is leaf
+            for(int i=numKeys; i>idx; i--){ // shifting
                 keys[i] = keys[i-1];
                 values[i] = values[i-1];
             }
@@ -40,7 +42,8 @@ struct Node{
         }
         else{
             if(childs[idx]->numKeys == maxChilds-1){
-                split(idx);
+                split(idx); // when the child node is full, split.
+
                 if(keys[idx] < key) childs[idx+1]->insertion(key,value);
                 else childs[idx]->insertion(key,value);
             }
@@ -48,37 +51,42 @@ struct Node{
         }
     }
 
+    /*
+        when childs[childIdx] is full, split.  
+    */
     void split(int childIdx){
-        // 노드 하나 더 만들어서 중앙값 오른쪽 값들 가져오기
+        // 노드 하나 더 만들어서 full 상태인 자식의 중앙값 오른쪽 key-value 옮기기
         Node *rightNode = new Node(maxChilds, childs[childIdx]->leaf);
         int mid = (maxChilds-1)/2;
-
-        childs[childIdx]->numKeys = mid;
-        rightNode->numKeys = (maxChilds-2)-(mid+1)+1;
 
         for(int i=mid+1; i<maxChilds-1; i++){
             rightNode->keys[i-mid-1] = childs[childIdx]->keys[i];
             rightNode->values[i-mid-1] = childs[childIdx]->values[i];
         }
 
+        childs[childIdx]->numKeys = mid;
+        rightNode->numKeys = (maxChilds-2)-(mid+1)+1;
+
+        // leaf 노드가 아니라면 자식 노드까지 옮기기
         if(rightNode->leaf == false){
             for(int i=mid+1; i<maxChilds; i++){
                 rightNode->childs[i-mid-1] = childs[childIdx]->childs[i];
             }
         }
         
-        // key들 한 칸씩 미루고 왼쪽 자식의 중앙값 가져오기
+        // childIdx 기준 오른쪽 key들 한 칸씩 미루고 중앙값 가져오기
         childs[numKeys+1] = childs[numKeys];
         for(int i=numKeys; i>childIdx; i--){
             keys[i] = keys[i-1];
             values[i] = values[i-1];
             childs[i] = childs[i-1];
         }
-        childs[childIdx+1] = rightNode;
-
         keys[childIdx] = childs[childIdx]->keys[mid];
         values[childIdx] = childs[childIdx]->values[mid];
         numKeys++;
+
+        // 중앙값의 오른쪽 자식으로 새로 만든 rightNode 연결
+        childs[childIdx+1] = rightNode;
     }
 };
 
@@ -112,7 +120,9 @@ struct BTree{
     void deletion(int key){}
 };
 
-
+/*
+    csv 파일을 읽어 key-value 정보를 data vector에 저장
+*/
 void parsing(string filename, vector<pair<int,int> >* data){
     ifstream file(filename);
 
@@ -147,6 +157,10 @@ void parsing(string filename, vector<pair<int,int> >* data){
     return;
 }
 
+/*
+    2개의 key-value vector를 비교
+    같으면 true, 다르면 false를 반환
+*/
 bool compare(vector<pair<int,int> > *data, vector<pair<int,int> > *res){
     if(data->size() != res->size()) return false;
 
@@ -192,11 +206,10 @@ int main(int argc, char *argv[]){
             }
             cout << "insertion completed\n";
 
-
             // search
             ofstream file("searched.csv");
             for(itr=data.begin(); itr!=data.end(); itr++){
-                pair<Node*,int> ans = tree.search(itr->first);
+                auto ans = tree.search(itr->first);
                 if(ans.first == NULL) 
                     file << itr->first << " " << "N/A\n";
                 else{
@@ -207,30 +220,28 @@ int main(int argc, char *argv[]){
             file.close();
             cout << "saved the result file named 'searched.csv'\n";
 
-
             // compare
             vector<pair<int,int> > results;
             parsing("searched.csv", &results);
-            if(compare(&data, &results)){
+
+            if(compare(&data, &results))
                 cout << filename + " equals searched.csv\n";
-            }
-            else{
+            else
                 cout << filename + " doesn't equal searched.csv\n";
-            }
         }
         else if(command == 2){ // deletion
-            string filename;
+            // string filename;
 
-            cout << "file path for deletion: ";
-            cin >> filename;
+            // cout << "file path for deletion: ";
+            // cin >> filename;
 
-            vector<pair<int,int> > data;
-            parsing(filename, &data);
+            // vector<pair<int,int> > data;
+            // parsing(filename, &data);
 
-            vector<pair<int,int> >::iterator itr;
-            for(itr=data.begin(); itr!=data.end(); itr++){
-                tree.deletion(itr->first);
-            }
+            // vector<pair<int,int> >::iterator itr;
+            // for(itr=data.begin(); itr!=data.end(); itr++){
+            //     tree.deletion(itr->first);
+            // }
         }
         else return 0;
     }
