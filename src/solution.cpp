@@ -40,7 +40,7 @@ struct Node{
             values[idx] = value;
             numKeys++; 
         }
-        else{
+        else{ // non-leaf node
             if(childs[idx]->numKeys == maxChilds-1){
                 split(idx); // when the child node is full, split.
 
@@ -52,10 +52,10 @@ struct Node{
     }
 
     /*
-        when childs[childIdx] is full, split.  
+        when childs[childIdx] is full, split into two.  
     */
     void split(int childIdx){
-        // 노드 하나 더 만들어서 full 상태인 자식의 중앙값 오른쪽 key-value 옮기기
+        // 노드 하나 더 만들어서 full인 자식의 중앙값 기준 오른쪽 key-value 옮기기
         Node *rightNode = new Node(maxChilds, childs[childIdx]->leaf);
         int mid = (maxChilds-1)/2;
 
@@ -64,8 +64,8 @@ struct Node{
             rightNode->values[i-mid-1] = childs[childIdx]->values[i];
         }
 
-        childs[childIdx]->numKeys = mid;
         rightNode->numKeys = (maxChilds-2)-(mid+1)+1;
+        childs[childIdx]->numKeys = mid;
 
         // leaf 노드가 아니라면 자식 노드까지 옮기기
         if(rightNode->leaf == false){
@@ -74,7 +74,7 @@ struct Node{
             }
         }
         
-        // childIdx 기준 오른쪽 key들 한 칸씩 미루고 중앙값 가져오기
+        // 오른쪽에 있는 key들 한 칸씩 미루고 중앙값 가져오기
         childs[numKeys+1] = childs[numKeys];
         for(int i=numKeys; i>childIdx; i--){
             keys[i] = keys[i-1];
@@ -116,6 +116,8 @@ struct BTree{
         if(root == NULL) return {NULL,-1};
         return root->search(key);
     }
+
+    void traversal(vector<pair<int,int> >* data){}
 
     void deletion(int key){}
 };
@@ -165,8 +167,8 @@ bool compare(vector<pair<int,int> > *data, vector<pair<int,int> > *res){
     if(data->size() != res->size()) return false;
 
     vector<pair<int,int> >::iterator dataItr, resItr;
-    dataItr = data->begin();
-    resItr = res->begin();
+    dataItr = data->begin(), resItr = res->begin();
+
     for(; dataItr!=data->end(); dataItr++, resItr++){
         if(dataItr->first != resItr->first) return false;
         if(dataItr->second != resItr->second) return false;
