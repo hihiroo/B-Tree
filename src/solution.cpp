@@ -3,93 +3,7 @@
 #include <string>
 #include <vector>
 #include <algorithm>
-#include <cassert>
 using namespace std;
-
-
-struct Node{
-    int *keys, *values, numKeys, maxChilds;
-    Node **childs;
-    bool leaf;
-
-    Node(int maxChilds, bool leaf): maxChilds(maxChilds), leaf(leaf){
-        keys = new int[maxChilds-1];
-        values = new int[maxChilds-1];
-        childs = new Node *[maxChilds];
-        numKeys = 0;
-    }
-
-    // return the node and index of the key
-    pair<Node*,int> search(int key){
-        int idx = lower_bound(keys, keys+numKeys, key) - keys;
-        if(keys[idx] == key) return {this,idx};
-        else if(leaf == true) return {NULL,-1};
-        else return childs[idx]->search(key);
-    }
-
-    void insertion(int key, int value){
-        int idx = lower_bound(keys, keys+numKeys, key) - keys;
-        if(idx < numKeys && keys[idx] == key) return;
-
-        if(leaf){ // insert if the node is leaf
-            for(int i=numKeys; i>idx; i--){ // shifting
-                keys[i] = keys[i-1];
-                values[i] = values[i-1];
-            }
-            keys[idx] = key;
-            values[idx] = value;
-            numKeys++; 
-        }
-        else{ // non-leaf node
-            if(childs[idx]->numKeys == maxChilds-1){
-                split(idx); // when the child node is full, split.
-
-                if(keys[idx] < key) childs[idx+1]->insertion(key,value);
-                else childs[idx]->insertion(key,value);
-            }
-            else childs[idx]->insertion(key,value);
-        }
-    }
-
-    /*
-        when childs[childIdx] is full, split into two.  
-    */
-    void split(int childIdx){
-        // 노드 하나 더 만들어서 full인 자식의 중앙값 기준 오른쪽 key-value 옮기기
-        Node *rightNode = new Node(maxChilds, childs[childIdx]->leaf);
-        int mid = (maxChilds-1)/2;
-
-        for(int i=mid+1; i<maxChilds-1; i++){
-            rightNode->keys[i-mid-1] = childs[childIdx]->keys[i];
-            rightNode->values[i-mid-1] = childs[childIdx]->values[i];
-        }
-
-        rightNode->numKeys = (maxChilds-2)-(mid+1)+1;
-        childs[childIdx]->numKeys = mid;
-
-        // leaf 노드가 아니라면 자식 노드까지 옮기기
-        if(rightNode->leaf == false){
-            for(int i=mid+1; i<maxChilds; i++){
-                rightNode->childs[i-mid-1] = childs[childIdx]->childs[i];
-            }
-        }
-        
-        // 오른쪽에 있는 key들 한 칸씩 미루고 중앙값 가져오기
-        childs[numKeys+1] = childs[numKeys];
-        for(int i=numKeys; i>childIdx; i--){
-            keys[i] = keys[i-1];
-            values[i] = values[i-1];
-            childs[i] = childs[i-1];
-        }
-        keys[childIdx] = childs[childIdx]->keys[mid];
-        values[childIdx] = childs[childIdx]->values[mid];
-        numKeys++;
-
-        // 중앙값의 오른쪽 자식으로 새로 만든 rightNode 연결
-        childs[childIdx+1] = rightNode;
-    }
-};
-
 
 struct BTree{
     int degree;
@@ -117,10 +31,123 @@ struct BTree{
         return root->search(key);
     }
 
-    void traversal(vector<pair<int,int> >* data){}
+    void traversal(vector<pair<int,int> >* data){
+        if(root == NULL) return;
+        root->traversal(data);
+    }
 
     void deletion(int key){}
 };
+
+
+struct Node{
+    int *keys, *values, numKeys, maxChilds;
+    Node **childs;
+    bool leaf;
+
+    Node(int maxChilds, bool leaf): maxChilds(maxChilds), leaf(leaf){
+        keys = new int[maxChilds-1];
+        values = new int[maxChilds-1];
+        childs = new Node *[maxChilds];
+        numKeys = 0;
+    }
+
+    pair<Node*,int> search(int key);
+    void insertion(int key, int value);
+    void split(int childIdx);
+    void traversal(vector<pair<int,int> >* data);
+    void deletion(int key);
+};
+
+
+/*
+    return the node and index of the key
+*/
+pair<Node*,int> Node::search(int key){
+    int idx = lower_bound(keys, keys+numKeys, key) - keys;
+    if(keys[idx] == key) return {this,idx};
+    else if(leaf == true) return {NULL,-1};
+    else return childs[idx]->search(key);
+}
+
+void Node::insertion(int key, int value){
+    int idx = lower_bound(keys, keys+numKeys, key) - keys;
+    if(idx < numKeys && keys[idx] == key) return;
+
+    if(leaf){ // insert if the node is leaf
+        for(int i=numKeys; i>idx; i--){ // shifting
+            keys[i] = keys[i-1];
+            values[i] = values[i-1];
+        }
+        keys[idx] = key;
+        values[idx] = value;
+        numKeys++; 
+    }
+    else{ // non-leaf node
+        if(childs[idx]->numKeys == maxChilds-1){
+            split(idx); // when the child node is full, split.
+
+            if(keys[idx] < key) childs[idx+1]->insertion(key,value);
+            else childs[idx]->insertion(key,value);
+        }
+        else childs[idx]->insertion(key,value);
+    }
+}
+
+/*
+    when childs[childIdx] is full, split into two.  
+*/
+void Node::split(int childIdx){
+    // 노드 하나 더 만들어서 full인 자식의 중앙값 기준 오른쪽 key-value 옮기기
+    Node *rightNode = new Node(maxChilds, childs[childIdx]->leaf);
+    int mid = (maxChilds-1)/2;
+
+    for(int i=mid+1; i<maxChilds-1; i++){
+        rightNode->keys[i-mid-1] = childs[childIdx]->keys[i];
+        rightNode->values[i-mid-1] = childs[childIdx]->values[i];
+    }
+
+    rightNode->numKeys = (maxChilds-2)-(mid+1)+1;
+    childs[childIdx]->numKeys = mid;
+
+    // leaf 노드가 아니라면 자식 노드까지 옮기기
+    if(rightNode->leaf == false){
+        for(int i=mid+1; i<maxChilds; i++){
+            rightNode->childs[i-mid-1] = childs[childIdx]->childs[i];
+        }
+    }
+    
+    // 오른쪽에 있는 key들 한 칸씩 미루고 중앙값 가져오기
+    childs[numKeys+1] = childs[numKeys];
+    for(int i=numKeys; i>childIdx; i--){
+        keys[i] = keys[i-1];
+        values[i] = values[i-1];
+        childs[i] = childs[i-1];
+    }
+    keys[childIdx] = childs[childIdx]->keys[mid];
+    values[childIdx] = childs[childIdx]->values[mid];
+    numKeys++;
+
+    // 중앙값의 오른쪽 자식으로 새로 만든 rightNode 연결
+    childs[childIdx+1] = rightNode;
+}
+
+/*
+    inorder traversal
+    key가 오름차순이 되도록 순회하여 key-value 쌍을 vector에 저장
+*/
+void Node::traversal(vector<pair<int,int> >* data){
+    for(int i=0; i<numKeys; i++){
+        if(!leaf) childs[i]->traversal(data);
+        data->emplace_back(keys[i],values[i]);
+    }
+    if(numKeys > 0 && !leaf) childs[numKeys]->traversal(data);
+}
+
+void Node::deletion(int key){
+
+}
+
 
 /*
     csv 파일을 읽어 key-value 정보를 data vector에 저장
@@ -176,74 +203,84 @@ bool compare(vector<pair<int,int> > *data, vector<pair<int,int> > *res){
     return true;
 }
 
+void insertion(BTree* tree){
+    string filename;
+
+    cout << "file path for insertion: ";
+    cin >> filename;
+
+    vector<pair<int,int> > data;
+    parsing(filename, &data);
+
+    vector<pair<int,int> >::iterator itr;
+    for(itr=data.begin(); itr!=data.end(); itr++){
+        tree->insertion(itr->first, itr->second);
+    }
+    cout << "insertion completed\n";
+
+    // search
+    ofstream file("searched.csv");
+
+    for(itr=data.begin(); itr!=data.end(); itr++){
+        auto ans = tree->search(itr->first);
+        if(ans.first == NULL) 
+            file << itr->first << " " << "N/A\n";
+        else{
+            int val = ans.first->values[ans.second];
+            file << itr->first << " " << val << '\n';
+        }
+    }
+
+    file.close();
+    cout << "saved the result file named 'searched.csv'\n";
+
+    // compare
+    vector<pair<int,int> > results;
+    parsing("searched.csv", &results);
+
+    if(compare(&data, &results)){
+        cout << filename + " equals searched.csv\n";
+    }
+    else{
+        cout << filename + " doesn't equal searched.csv\n";
+    }
+}
+
+void deletion(BTree* tree){
+    string filename;
+
+    cout << "file path for deletion: ";
+    cin >> filename;
+
+    vector<pair<int,int> > data;
+    parsing(filename, &data);
+
+    vector<pair<int,int> >::iterator itr;
+    for(itr=data.begin(); itr!=data.end(); itr++){
+        tree->deletion(itr->first);
+    }
+}
 
 int main(int argc, char *argv[]){
-    int degree;
-    if(argc == 1){
+    int degree = argc > 1 ? *argv[1] : -1;
+    
+    while(degree < 2){
         cout << "input the degree of a tree: ";
         cin >> degree;
     }
-    else degree = *argv[1];
 
     BTree tree(degree);
 
     while(1){
         int command;
-
         cout << "input command(1: insertion 2: deletion 3: quit): ";
         cin >> command;
 
         if(command == 1){ // insertion
-            string filename;
-
-            cout << "file path for insertion: ";
-            cin >> filename;
-
-            vector<pair<int,int> > data;
-            parsing(filename, &data);
-
-            vector<pair<int,int> >::iterator itr;
-            for(itr=data.begin(); itr!=data.end(); itr++){
-                tree.insertion(itr->first, itr->second);
-            }
-            cout << "insertion completed\n";
-
-            // search
-            ofstream file("searched.csv");
-            for(itr=data.begin(); itr!=data.end(); itr++){
-                auto ans = tree.search(itr->first);
-                if(ans.first == NULL) 
-                    file << itr->first << " " << "N/A\n";
-                else{
-                    int val = ans.first->values[ans.second];
-                    file << itr->first << " " << val << '\n';
-                }
-            }
-            file.close();
-            cout << "saved the result file named 'searched.csv'\n";
-
-            // compare
-            vector<pair<int,int> > results;
-            parsing("searched.csv", &results);
-
-            if(compare(&data, &results))
-                cout << filename + " equals searched.csv\n";
-            else
-                cout << filename + " doesn't equal searched.csv\n";
+            insertion(&tree);
         }
         else if(command == 2){ // deletion
-            // string filename;
-
-            // cout << "file path for deletion: ";
-            // cin >> filename;
-
-            // vector<pair<int,int> > data;
-            // parsing(filename, &data);
-
-            // vector<pair<int,int> >::iterator itr;
-            // for(itr=data.begin(); itr!=data.end(); itr++){
-            //     tree.deletion(itr->first);
-            // }
+            deletion(&tree);
         }
         else return 0;
     }
