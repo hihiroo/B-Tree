@@ -36,7 +36,35 @@ struct BTree{
         root->traversal(data);
     }
 
-    void deletion(int key){}
+    void deletion(int key){
+        if(root == NULL) return;
+            // key 검색
+            // key 있음
+                // leaf 노드일 때
+                    // 그냥 삭제
+                    // key 개수가 0이면 노드 삭제
+                // leaf 노드가 아닐 때 
+                    // 왼쪽 자식의 키가 남을 때
+                        // 왼쪽 서브트리의 max 값 검색 후 돌아옴
+                        // max 값을 key가 있던 자리에 덮어쓰기
+                        // 왼쪽 서브트리에 대해 max 값 삭제 함수 호출
+                    // 오른쪽 자식의 키가 남을 때
+                        // 위와 동일하지만 min 값 검색
+                    // 둘 다 안남을 때
+                        // 왼쪽자식 + key + 오른쪽 자식 merge 후 키 한 칸씩 당김. 
+                        // 키 개수가 0이면 루트를 왼쪽 자식으로 변경하고 현재 루트 삭제
+                        // 왼쪽 서브트리 삭제 함수 호출
+            // key 없음
+                // 왼쪽 자식이 미니멈 노드인 경우
+                    // 왼쪽 자식의 인접 노드들이 키가 남는 경우
+                        // 현재 노드의 key를 왼쪽 자식의 제일 오른쪽에 삽입
+                        // 인접 노드의 키(max or min)를 현재 노드의 key에 덮어쓰기
+                    // 안 남는 경우
+                        // 왼쪽 자식+현재 키+오른쪽 자식 merge, 오른쪽 자식 없애고 현재 노드 key 한 칸씩 당기기
+                        // key 개수가 0이면 루트를 왼쪽 자식으로 변경하고 현재 루트 삭제
+                        // 이미 현재 노드의 부모에서 현재 노드가 미니멈 노드가 아니도록 해놨음
+
+    }            
 };
 
 
@@ -145,7 +173,27 @@ void Node::traversal(vector<pair<int,int> >* data){
 }
 
 void Node::deletion(int key){
-
+    // key 검색
+    // key 있음
+        // leaf 노드일 때
+            // 그냥 삭제
+        // leaf 노드가 아닐 때 
+            // 왼쪽 자식의 키가 남을 때
+                // 왼쪽 서브트리의 max 값 검색 후 돌아옴
+                // max 값을 key가 있던 자리에 덮어쓰기
+                // 왼쪽 서브트리에 대해 max 값 삭제 함수 호출
+            // 오른쪽 자식의 키가 남을 때
+                // 위와 동일하지만 min 값 검색
+            // 둘 다 안남을 때
+                // 왼쪽자식 + key + 오른쪽 자식 merge 후 키 한 칸씩 당김. 왼쪽 서브트리 삭제 함수 호출
+    // key 없음
+        // 왼쪽 자식이 미니멈 노드인 경우
+            // 왼쪽 자식의 인접 노드들이 키가 남는 경우
+                // 현재 노드의 key를 왼쪽 자식의 제일 오른쪽에 삽입
+                // 인접 노드의 키(max or min)를 현재 노드의 key에 덮어쓰기
+            // 안 남는 경우
+                // 왼쪽 자식+현재 키+오른쪽 자식 merge, 오른쪽 자식 없애고 현재 노드 key 한 칸씩 당기기
+                // 이미 현재 노드의 부모에서 현재 노드가 미니멈 노드가 아니도록 해놨음
 }
 
 
@@ -263,7 +311,7 @@ void deletion(BTree* tree){
 
 int main(int argc, char *argv[]){
     int degree = argc > 1 ? *argv[1] : -1;
-    
+
     while(degree < 2){
         cout << "input the degree of a tree: ";
         cin >> degree;
