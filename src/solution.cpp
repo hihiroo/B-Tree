@@ -56,22 +56,17 @@ struct BTree{
         }
         root->insertion(key, value);
     }
-
     pair<Node*,int> search(int key){
         if(root == NULL) return {NULL,-1};
         return root->search(key);
     }
-
     void traversal(vector<pair<int,int> >* data){
         if(root == NULL) return;
         root->traversal(data);
     }
-
     void deletion(int key){
         if(root == NULL) return;
-
         root->deletion(key);
-
         if(root->numKeys == 0){
             Node *tmp = root;
             if(root->leaf) root = NULL;
@@ -107,7 +102,6 @@ void Node::insertion(int key, int value){
     else{ // non-leaf node
         if(childs[idx]->numKeys == maxChilds-1){
             split(idx); // when the child node is full, split.
-
             if(keys[idx] < key) childs[idx+1]->insertion(key,value);
             else childs[idx]->insertion(key,value);
         }
@@ -200,6 +194,7 @@ void Node::deletion(int key){
         }
     }
     else{ // key가 현재 노드에 없음
+        if(leaf) return;
         if(childs[idx]->numKeys == minKeys){ // 왼쪽 자식(childs[idx])이 minimum node인 경우
             makeNonMinimum(idx);
             idx = min(idx, numKeys);
@@ -402,12 +397,10 @@ void insertion(BTree* tree, vector<pair<int,int> > *data){
     vector<pair<int,int> > results;
     parsing("searched.csv", &results);
 
-    if(compare(data, &results)){
+    if(compare(data, &results))
         cout << filename + " equals searched.csv\n";
-    }
-    else{
+    else
         cout << filename + " doesn't equal searched.csv\n";
-    }
 }
 
 void deletion(BTree* tree, vector<pair<int,int> > *input){
@@ -443,23 +436,18 @@ void deletion(BTree* tree, vector<pair<int,int> > *input){
     file.close();
     cout << "saved the result file named 'delete_results.csv'\n";
 
-
     // compare
     cout << "file path for compare: ";
     cin >> filename;
 
-    vector<pair<int,int> > compareData;
+    vector<pair<int,int> > compareData, results;
     parsing(filename, &compareData);
-
-    vector<pair<int,int> > results;
     parsing("delete_results.csv", &results);
 
-    if(compare(&compareData, &results)){
+    if(compare(&compareData, &results))
         cout << filename + " equals delete_results.csv\n";
-    }
-    else{
+    else
         cout << filename + " doesn't equal delete_results.csv\n";
-    }
 }
 
 int main(int argc, char *argv[]){
