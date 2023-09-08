@@ -20,7 +20,6 @@ struct Node{
     pair<Node*,int> search(int key);
     void insertion(int key, int value);
     void split(int childIdx);
-    void traversal(vector<pair<int,int> >* data);
     void deletion(int key);
     void merge(int idx);
     void makeNonMinimum(int idx);
@@ -59,10 +58,6 @@ struct BTree{
     pair<Node*,int> search(int key){
         if(root == NULL) return {NULL,-1};
         return root->search(key);
-    }
-    void traversal(vector<pair<int,int> >* data){
-        if(root == NULL) return;
-        root->traversal(data);
     }
     void deletion(int key){
         if(root == NULL) return;
@@ -145,18 +140,6 @@ void Node::split(int childIdx){
 
     // 중앙값의 오른쪽 자식으로 새로 만든 rightNode 연결
     childs[childIdx+1] = rightNode;
-}
-
-/*
-    inorder traversal
-    key가 오름차순이 되도록 순회하여 key-value 쌍을 vector에 저장
-*/
-void Node::traversal(vector<pair<int,int> >* data){
-    for(int i=0; i<numKeys; i++){
-        if(!leaf) childs[i]->traversal(data);
-        data->emplace_back(keys[i],values[i]);
-    }
-    if(numKeys > 0 && !leaf) childs[numKeys]->traversal(data);
 }
 
 /*
