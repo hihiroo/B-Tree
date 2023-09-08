@@ -160,7 +160,9 @@ void Node::traversal(vector<pair<int,int> >* data){
 }
 
 /*
-    루트 노드를 제외한 노드에 대하여 항상 minimum 노드가 아님을 보장
+    해당 노드를 루트로 하는 서브트리에서 key 삭제
+    자식 노드로 이동할 때 makeNonMinimum 함수를 호출하여
+    key가 존재할 수도 있는 자식 노드가 minimum node가 아님을 보장
 */
 void Node::deletion(int key){
     int minKeys = maxChilds/2-1; // 최소 키 개수
@@ -206,7 +208,7 @@ void Node::deletion(int key){
 
 /*
     childs[idx]가 minimum node가 아니도록 만드는 함수
-    인접한 형제 노드에서 key를 가져오거나 merge를 통해 full node로 만들 수 있음
+    인접한 형제 노드에서 key를 가져오거나 merge를 실행
 */
 void Node::makeNonMinimum(int idx){
     int minKeys = maxChilds/2-1; // 최소 키 개수
@@ -269,7 +271,7 @@ void Node::makeNonMinimum(int idx){
 }
 
 /*
-    keys[idx], 오른쪽 자식을 왼쪽 자식에 순서대로 merge
+    keys[idx]와 오른쪽 자식을 왼쪽 자식에 순서대로 merge하여 full node로 만드는 함수
 */
 void Node::merge(int idx){
     int minkey = maxChilds/2 - 1;
@@ -366,11 +368,12 @@ bool compare(vector<pair<int,int> > *data, vector<pair<int,int> > *res){
 void insertion(BTree* tree, vector<pair<int,int> > *data){
     string filename;
 
-    cout << "file path for insertion: ";
+    cout << "> file path for insertion: ";
     cin >> filename;
 
     parsing(filename, data);
 
+    // insertion
     vector<pair<int,int> >::iterator itr;
     for(itr=data->begin(); itr!=data->end(); itr++){
         tree->insertion(itr->first, itr->second);
@@ -391,7 +394,7 @@ void insertion(BTree* tree, vector<pair<int,int> > *data){
     }
 
     file.close();
-    cout << "saved the result file named 'searched.csv'\n";
+    cout << "saved the result file at 'searched.csv'\n";
 
     // compare
     vector<pair<int,int> > results;
@@ -406,7 +409,7 @@ void insertion(BTree* tree, vector<pair<int,int> > *data){
 void deletion(BTree* tree, vector<pair<int,int> > *input){
     string filename;
 
-    cout << "file path for deletion: ";
+    cout << "> file path for deletion: ";
     cin >> filename;
 
     vector<pair<int,int> > data;
@@ -434,10 +437,10 @@ void deletion(BTree* tree, vector<pair<int,int> > *input){
         }
     }
     file.close();
-    cout << "saved the result file named 'delete_results.csv'\n";
+    cout << "saved the result file at 'delete_results.csv'\n";
 
     // compare
-    cout << "file path for compare: ";
+    cout << "> file path for comparison: ";
     cin >> filename;
 
     vector<pair<int,int> > compareData, results;
@@ -452,9 +455,8 @@ void deletion(BTree* tree, vector<pair<int,int> > *input){
 
 int main(int argc, char *argv[]){
     int degree = argc > 1 ? *argv[1] : -1;
-
     while(degree < 2){
-        cout << "input the degree of a tree: ";
+        cout << "> input the degree of a tree: ";
         cin >> degree;
     }
 
@@ -463,7 +465,7 @@ int main(int argc, char *argv[]){
 
     while(1){
         int command;
-        cout << "input command(1: insertion 2: deletion 3: quit): ";
+        cout << "> input command(1: insertion 2: deletion 3: quit): ";
         cin >> command;
 
         if(command == 1){ // insertion
